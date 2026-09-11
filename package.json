@@ -57,7 +57,7 @@
     "jsonwebtoken": "^9.0.2",
     "livekit-server-sdk": "^2.10.0",
     "lucide-react": "^0.475.0",
-    "next": "^16.3.0",
+    "next": "^16.3.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "recharts": "^2.15.1",
