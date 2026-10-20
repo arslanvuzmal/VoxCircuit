@@ -764,11 +764,23 @@ A Vercel `READY` state verifies deployment completion, not database migrations, 
 git clone https://github.com/arslanvuzmal/VoxCircuit.git
 cd VoxCircuit
 npm ci
-cp .env.example .env.local
+cp .env.example .env.local   # set DATABASE_URL and the secrets listed below
 docker compose up -d
-npx prisma migrate dev
-npm run dev
+set -a; . ./.env.local; set +a   # the Prisma CLI and the seed script read the environment, not .env.local
+npx prisma db push           # see the note below
+npm run db:seed              # demo workspace, agent, agent version, training pack, language profile
+npm run build && npm start
 ```
+
+Then open http://localhost:3000/demo, pick a scenario and press **Run persisted simulation**. The
+conversation, any appointment, opportunity or task it creates, and every policy decision appear in the
+dashboard and the audit log. No call is placed and no provider is contacted.
+
+**Why `db push`, not `migrate`:** the migrations in `prisma/migrations` start from an existing
+database (the first one alters tables it does not create), so `prisma migrate dev` and
+`prisma migrate deploy` fail on an empty database. `db push` creates the current schema directly.
+Adding a baseline migration would fix this, but an existing database then has to mark it as applied
+(`prisma migrate resolve --applied <name>`) before the next `migrate deploy`.
 
 `TELEPHONY_MODE=simulation` is the safe default. Keep it in simulation unless provider-backed calling has explicitly authorized Telnyx and ElevenLabs resources, required secrets, webhook endpoints, consent policy, and acceptance tests.
 
