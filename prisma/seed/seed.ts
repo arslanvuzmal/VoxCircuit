@@ -89,6 +89,76 @@ async function main() {
     },
   });
 
+  // 4b. What the deterministic simulation needs (lib/telephony/simulation/run-simulation.ts): a
+  // version of the active agent, its business training pack and a language profile. Without them
+  // POST /api/demo/simulation answers DEMO_NOT_READY on a freshly seeded database.
+  await prisma.agentVersion.create({
+    data: {
+      agentId: agentMaya.id,
+      versionNumber: 1,
+      greeting: agentMaya.greeting,
+      systemInstructions: agentMaya.systemInstructions,
+      voiceId: agentMaya.voiceId,
+    },
+  });
+  await prisma.businessTrainingPack.create({
+    data: {
+      workspaceId: workspace.id,
+      agentId: agentMaya.id,
+      businessName: 'Northstar Legal Consultations',
+      industry: 'Legal Services',
+      description: 'Fictional commercial and corporate law practice used for the demo.',
+      timeZone: 'America/New_York',
+      identityJson: { name: 'Northstar Legal Consultations', locations: ['New York, NY'] },
+      servicesJson: [
+        { name: 'Contract review', durationMinutes: 30 },
+        { name: 'Litigation defense consultation', durationMinutes: 45 },
+        { name: 'Estate planning consultation', durationMinutes: 45 },
+      ],
+      officeHoursJson: {
+        monday: '09:00-17:00',
+        tuesday: '09:00-17:00',
+        wednesday: '09:00-17:00',
+        thursday: '09:00-17:00',
+        friday: '09:00-17:00',
+      },
+      approvedAnswersJson: [
+        {
+          question: 'Do you offer free consultations?',
+          answer: 'The first 30-minute contract review call is free.',
+        },
+      ],
+      policiesJson: {
+        legalAdvice: 'The agent never gives legal advice; it books a consultation instead.',
+      },
+      intakeJson: { required: ['name', 'phone', 'matterType'], optional: ['email', 'company'] },
+      qualificationJson: { criteria: ['matter type', 'timeline', 'decision authority'] },
+      appointmentJson: { bufferMinutes: 15, maxDaysAhead: 30 },
+      escalationJson: {
+        triggers: ['urgent court deadline', 'caller asks for a lawyer'],
+        destination: 'front desk',
+      },
+      outboundJson: {
+        workflows: ['appointment reminder'],
+        disclosure: 'This is an automated call from Northstar Legal.',
+      },
+      safetyJson: { restrictedTopics: ['legal advice', 'case outcomes'] },
+      languagesJson: ['en-US'],
+      versionNumber: 1,
+    },
+  });
+  await prisma.languageProfile.create({
+    data: {
+      workspaceId: workspace.id,
+      languageCode: 'en-US',
+      locale: 'en-US',
+      displayName: 'English (US)',
+      voiceAgentId: agentMaya.id,
+      webSupported: true,
+      businessContentComplete: true,
+    },
+  });
+
   // 5. Seed Initial Calls & Outcomes
   const call1 = await prisma.call.create({
     data: {
